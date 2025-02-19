@@ -19,8 +19,45 @@ test:
 	pushq	%rdi
 	pushq	%rsi
 	rrmovq	%rax, %rsi      # array in %rdi, i in %rsi
-        call    avg
-        rrmovq  %rax, %r8       # save result of avg
+	#avg starts here
+	pushq   %rbx            # save callee-saved regs we use
+
+        rrmovq  %rsi, %r8       # array[i - 1] into %rbx
+	irmovq	$1, %r11
+	subq	%r11, %r8
+	irmovq	$8, %r11
+	mulq	%r11, %r8
+	addq	%rdi, %r8
+	mrmovq	0(%r8), %rbx
+
+        rrmovq  %rsi, %r8       # array[i] into %rcx
+	irmovq	$8, %r11
+	mulq	%r11, %r8
+	addq	%rdi, %r8
+	mrmovq	0(%r8), %rcx
+
+	rrmovq	%rsi, %r8       # array[i + 1] into %rdx
+	irmovq	$1, %r11
+        addq    %r11, %r8
+	irmovq	$8, %r11
+	mulq	%r11, %r8
+	addq	%rdi, %r8
+	mrmovq	0(%r8), %rdx
+
+        rrmovq  %rbx, %rax      # compute %rbx + 2 * %rcx + %rdx in %rax
+	irmovq	$2, %r9
+	mulq	%r9, %rcx
+	addq	%rcx, %rax
+	addq	%rdx, %rax
+
+        irmovq  $4, %r11        # divide by 4
+	divq	%r11, %rax
+    #avg ends here
+    
+        popq    %rbx            # restore callee-regs we use
+	    rrmovq  %rax, %r8       # save result of avg
+        
+        
         popq    %rsi            # restore caller-save regs we are using
 	popq	%rdi
 	popq	%rax
